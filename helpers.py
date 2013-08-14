@@ -4,9 +4,14 @@
 from rdio import Rdio
 from credentials import *
 
-# initalize Rdio using tokens/secrets stored in credentials file
 rdio = Rdio((RDIO_CONSUMER_KEY, RDIO_CONSUMER_SECRET), 
 		    (RDIO_TOKEN, RDIO_TOKEN_SECRET))
+
+# initalize Rdio using tokens/secrets stored in credentials file
+def initializeRdio():	
+	rdio = Rdio((RDIO_CONSUMER_KEY, RDIO_CONSUMER_SECRET), 
+			    (RDIO_TOKEN, RDIO_TOKEN_SECRET))
+	return rdio
 
 # get the keys for all playlists owned by the authenticated user
 # returns a list of playlist keys
@@ -20,11 +25,24 @@ def getPlaylistKeys():
 # get all the track keys for a given playlist
 # returns a list of track keys
 def getPlaylistTracks(playlist_key):
-	track_keys = rdio.call('get', {'keys': playlist_key, 'extras': 'trackKeys'}
+	track_keys = rdio.call('get', {'keys': playlist_key, 'extras': 'trackKeys'})
+	return track_keys
 
-def main():
+#returns boolean true if a track is still available; key should be a string	
+def is_available(key):
+	track_info = rdio.call('get', {'keys' : key})
+	availability = track_info['result'][key]['canStream']
+	return availability
 	
-	#METHODS TO RUN GO HERE
-	
-if __name__ == '__main__':
-	main()
+# accepts dict with 'artist' and 'title'; searches rdio for matching track
+# returns track key
+# BETTER WAY TO DO ERROR HANDLING? SIMILARITY SCORES?
+def find_track(track):
+    query = track['artist']+' '+track['title']
+    search = rdio.call('search', {'query': query, 'types': 'Track'})
+    search = search['result']['results'] #gets rid of extraneous matter from search query return
+    for result in search:
+        if re.search(track['artist'],result['artist'],flags=re.IGNORECASE) != None:
+            if re.search(track['title'],result['name'],flags=re.IGNORECASE) != None:
+                if result['canStream']:
+                    return result['key']
