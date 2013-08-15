@@ -8,14 +8,14 @@ rdio = Rdio((RDIO_CONSUMER_KEY, RDIO_CONSUMER_SECRET),
 		    (RDIO_TOKEN, RDIO_TOKEN_SECRET))
 
 # initalize Rdio using tokens/secrets stored in credentials file
-def initializeRdio():	
+def initialize_rdio():	
 	rdio = Rdio((RDIO_CONSUMER_KEY, RDIO_CONSUMER_SECRET), 
 			    (RDIO_TOKEN, RDIO_TOKEN_SECRET))
 	return rdio
 
 # get the keys for all playlists owned by the authenticated user
 # returns a list of playlist keys
-def getPlaylistKeys():
+def get_playlist_keys():
 	playlist_keys = []
 	playlists = rdio.call('getPlaylists')['result']['owned']
 	for playlist in playlists:
@@ -24,8 +24,10 @@ def getPlaylistKeys():
 
 # get all the track keys for a given playlist
 # returns a list of track keys
-def getPlaylistTracks(playlist_key):
-	track_keys = rdio.call('get', {'keys': playlist_key, 'extras': 'trackKeys'})
+def get_playlist_tracks(playlist_key):
+	track_keys = (rdio.call('get', {'keys': playlist_key, 
+									'extras': 'trackKeys'})
+				  ['result'][playlist_key]['trackKeys'])
 	return track_keys
 
 #returns boolean true if a track is still available; key should be a string	
@@ -46,3 +48,7 @@ def find_track(track):
             if re.search(track['title'],result['name'],flags=re.IGNORECASE) != None:
                 if result['canStream']:
                     return result['key']
+
+# looks for any dead (unavailable) tracks, attempts to replace them
+# requires playlist key
+def refresh_playlist(playlist_key):
