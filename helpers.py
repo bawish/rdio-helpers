@@ -65,9 +65,13 @@ def refresh_playlist(playlist_key):
 			if find_track(create_track_dict(track)):
 				new_track_key = find_track(create_track_dict(track))
 				index = tracks.index(track)
-				rdio.call('addToPlaylist', {'playlist': playlist_key, 'tracks': new_track_key})
-				rdio.call('removeFromPlaylist', {'playlist': playlist_key, 'index': index, 'count': 1, 'tracks': track})
+				rdio.call('addToPlaylist', {'playlist': playlist_key, 
+											'tracks': new_track_key})
+				rdio.call('removeFromPlaylist', {'playlist': playlist_key, 
+												 'index': index, 'count': 1, 
+												 'tracks': track})
 				new_track_list = get_playlist_tracks(playlist_key)
-				new_track_list.insert[index, new_track_key].pop()
+				new_track_list.insert(index, new_track_key)
+				new_track_list.pop()
 				new_track_list_string = ', '.join(new_track_list)
 				rdio.call('setPlaylistOrder', {'playlist': playlist_key, 'tracks': new_track_list_string}) 
