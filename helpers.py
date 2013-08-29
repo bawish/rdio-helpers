@@ -4,6 +4,8 @@
 from rdio import Rdio
 from credentials import *
 import re
+from fuzzywuzzy import fuzz
+from fuzzywuzzy import process
 
 rdio = Rdio((RDIO_CONSUMER_KEY, RDIO_CONSUMER_SECRET), 
 		    (RDIO_TOKEN, RDIO_TOKEN_SECRET))
@@ -39,7 +41,6 @@ def is_available(key):
 	
 # accepts dict with 'artist' and 'title'; searches rdio for matching track
 # returns track key
-# BETTER WAY TO DO ERROR HANDLING? SIMILARITY SCORES?
 def find_track(track_dict):
     query = track_dict['artist']+' '+track_dict['title']
     search = rdio.call('search', {'query': query, 'types': 'Track'})
