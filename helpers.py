@@ -4,6 +4,8 @@
 from rdio import Rdio
 from credentials import *
 import re
+from fuzzywuzzy import fuzz
+from fuzzywuzzy import process
 
 rdio = Rdio((RDIO_CONSUMER_KEY, RDIO_CONSUMER_SECRET), 
 		    (RDIO_TOKEN, RDIO_TOKEN_SECRET))
@@ -39,16 +41,29 @@ def is_available(key):
 	
 # accepts dict with 'artist' and 'title'; searches rdio for matching track
 # returns track key
-# BETTER WAY TO DO ERROR HANDLING? SIMILARITY SCORES?
 def find_track(track_dict):
-    query = track_dict['artist']+' '+track_dict['title']
-    search = rdio.call('search', {'query': query, 'types': 'Track'})
-    search = search['result']['results'] #gets rid of extraneous matter from search query return
-    for result in search:
-        if re.search(track_dict['artist'],result['artist'],flags=re.IGNORECASE) != None:
-            if re.search(track_dict['title'],result['name'],flags=re.IGNORECASE) != None:
-                if result['canStream']:
-                    return result['key']
+	query = track_dict['artist']+' '+track_dict['title']
+	search = rdio.call('search', {'query': query, 'types': 'Track'})
+    
+	#set how many options to search amongst; never more than 5
+	result_count = search['result']['track_count']
+	choice_count = 5 if result_count > 5 else result_count #one-line if-else statement!
+	
+	choices = []
+	
+	for i in range(0, choice_count):
+		choice_string = (search['result']['results'][i]['artist'] + ' ' + 
+						 search['result']['results'][i]['name'])
+		choices.append(choice_string)
+		
+	#use seatgeek fuzzywuzzy matching to find best choice
+	best_choice = process.extractOne(query, choices)	
+
+	index = choices.index(best_choice[0])
+	
+	#get the track key for the best choice
+	key = search['result']['results'][index]['key']
+	return key
 
 # creates a dict with 'artist' and 'title' attributes from a track key
 def create_track_dict(track_key):
