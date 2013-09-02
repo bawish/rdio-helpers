@@ -57,14 +57,20 @@ def find_track(track_dict):
 		choices.append(choice_string)
 		
 	#use seatgeek fuzzywuzzy matching to find best choice
-	best_choice = process.extractOne(query, choices)	
+	best_choice = process.extractOne(query, choices)
 
-	index = choices.index(best_choice[0])
+	#weed out results with low similarity scores
+	if (int(best_choice[1]))>89:
 	
-	#get the track key for the best choice
-	key = search['result']['results'][index]['key']
-	return key
-
+		index = choices.index(best_choice[0])
+		
+		#make sure it's streamable
+		if search['result']['results'][index]['canStream']:
+			
+			#get the track key for the best choice
+			key = search['result']['results'][index]['key']
+			return key
+		
 # creates a dict with 'artist' and 'title' attributes from a track key
 def create_track_dict(track_key):
 	track_info = rdio.call('get', {'keys': track_key})['result'][track_key]
