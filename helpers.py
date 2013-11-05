@@ -42,8 +42,25 @@ def is_available(key):
 # accepts dict with 'artist' and 'title'; searches rdio for matching track
 # returns track key
 def find_track(track_dict):
+	# not sure the encoding here helps; try deleting it at some point
+	if type(track_dict['artist']) == 'unicode':
+		track_dict['artist'] = track_dict['artist'].encode('utf8', 'ignore')
+	if type(track_dict['title']) == 'unicode':
+		track_dict['title'] = track_dict['title'].encode('utf8', 'ignore')
+	
 	query = track_dict['artist']+' '+track_dict['title']
-	search = rdio.call('search', {'query': query, 'types': 'Track'})
+	
+	try:
+		search = rdio.call('search', {'query': query, 'types': 'Track'})
+	except UnicodeEncodeError, e:
+		# get index of problem character
+		error_message = str(e)
+		m = re.search('(?<=position )..', error_message)
+		char_index = int(m.group())
+		
+		#eliminate trouble character & re-search
+		query = query[:char_index] + query[char_index+1:]
+		search = rdio.call('search', {'query': query, 'types': 'Track'})
     
 	#set how many options to search amongst; never more than 5
 	result_count = search['result']['track_count']
@@ -83,8 +100,9 @@ def refresh_playlist(playlist_key):
 	tracks = get_playlist_tracks(playlist_key)
 	for track in tracks:
 		if not is_available(track):
-			if find_track(create_track_dict(track)):
-				new_track_key = find_track(create_track_dict(track))
+			track_query = create_track_dict(track)
+			if find_track(track_query):
+				new_track_key = find_track(track_query)
 				index = tracks.index(track)
 				rdio.call('addToPlaylist', {'playlist': playlist_key, 
 											'tracks': new_track_key})
