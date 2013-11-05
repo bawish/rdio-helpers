@@ -55,7 +55,7 @@ def find_track(track_dict):
 	except UnicodeEncodeError, e:
 		# get index of problem character
 		error_message = str(e)
-		m = re.search('(?<=position )..', error_message)
+		m = re.search('(?<=position ).*(?=:)', error_message)
 		char_index = int(m.group())
 		
 		#eliminate trouble character & re-search
@@ -101,7 +101,9 @@ def refresh_playlist(playlist_key):
 	for track in tracks:
 		if not is_available(track):
 			track_query = create_track_dict(track)
+			print "Looking for %s by %s..." % (track_query['title'], track_query['artist'])
 			if find_track(track_query):
+				print "Found it!"
 				new_track_key = find_track(track_query)
 				index = tracks.index(track)
 				rdio.call('addToPlaylist', {'playlist': playlist_key, 
